@@ -3,8 +3,9 @@
 Notebook: <https://colab.research.google.com/drive/1FR3zFhiDLb5t5p5vUhwzLqpC1wbfJteg>
 
 Kod artıq işlədilmiş vəziyyətdə saxlanılıb — internet zəif olsa belə çıxışlar
-və qrafiklər görünəcək. Yenidən işlətmək lazım gəlsə: `Runtime → Run all`
-(~10 saniyə, GPU lazım deyil).
+və qrafiklər görünəcək. Yenidən işlətmək lazım gəlsə:
+`Runtime → Change runtime type → T4 GPU → Save`, sonra `Runtime → Run all`
+(~10 saniyə).
 
 ---
 
@@ -66,8 +67,17 @@ yaddaşa qənaət edir və sürəti artırır. Modeli FastAPI ilə servis edənd
 unutmaq serverin yaddaşının dolması deməkdir.
 
 **«GPU işlətdinmi?»**
-Yox, lazım deyil. 4 misal və 2 parametr üçün CPU kifayətdir. GPU minlərlə
-paralel vurma lazım olanda — böyük modellərdə — qazanc verir.
+Bəli — runtime T4 GPU-dur, 0-cı hüceyrə `torch.cuda.is_available() → True`
+göstərir, model və məlumat dərsin 3.6 bölməsindəki kimi `.to(device)` ilə
+GPU-ya köçürülüb (`Model harada: cuda:0`). Dürüst deyim: bu ölçüdə —
+4 misal, 2 parametr — GPU sürət qazandırmır, hətta bir az yavaş ola bilər,
+çünki vaxtın çoxu məlumatın köçürülməsinə gedir. GPU minlərlə paralel vurma
+olanda qazanc verir. Burada məqsəd `.to(device)` mexanizmini düzgün qurmaqdır.
+
+**«`Expected all tensors to be on the same device` xətası nədir?»**
+Bir tensor CPU-da, digəri GPU-da qalanda çıxır — dərsin 9-cu bölməsindəki
+ikinci ən çox edilən səhv. Ona görə `X`, `y`, model və `x = 10` girişi —
+hamısı `.to(device)` ilə eyni cihazdadır.
 
 **«`lr`-i dəyişsən nə olar?»**
 `0.01` → `0.1` daha tez yığardı və 200 epoch-da 50-yə çatardı. Amma çox

@@ -25,9 +25,27 @@ Tapşırığın 5 bəndi:
 
 Aşağıdakı kod dərsdəki skeletin eynisidir — yalnız `# TAMAMLA` yerləri
 doldurulub, heç nə silinməyib və heç bir parametr dəyişdirilməyib.
+
+> **İşlətməzdən əvvəl:** `Runtime → Change runtime type → T4 GPU → Save`
+> (dərsin 2-ci bölməsi). Növbəti hüceyrə bunu yoxlayır.
 ````
 
-## Hüceyrə 2 — KOD (Code) — Esas hell
+## Hüceyrə 2 — KOD (Code) — Hazirliq yoxlamasi
+
+```python
+# ----- 0. HAZIRLIQ (dərsin 2-ci bölməsi) -----
+import torch
+
+print("PyTorch versiyası:", torch.__version__)
+print("GPU var:", torch.cuda.is_available())
+
+if torch.cuda.is_available():
+    print("GPU modeli:", torch.cuda.get_device_name(0))
+else:
+    print("Diqqət: Runtime → Change runtime type → T4 GPU → Save")
+```
+
+## Hüceyrə 3 — KOD (Code) — Esas hell
 
 ```python
 import torch
@@ -37,13 +55,19 @@ import matplotlib.pyplot as plt
 
 torch.manual_seed(42)
 
+# Dərsin 3.6 bölməsi: GPU varsa onu, yoxdursa CPU-nu seçirik.
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print("İstifadə edirik:", device)
+
 # ----- 1. MƏLUMAT -----
-X = torch.tensor([1.0, 2.0, 3.0, 4.0]).reshape(-1, 1)
+X = torch.tensor([1.0, 2.0, 3.0, 4.0]).reshape(-1, 1).to(device)
 # TAMAMLA: hər ədədin 5 mislini yazın (5, 10, 15, 20)
-y = torch.tensor([5.0, 10.0, 15.0, 20.0]).reshape(-1, 1)
+y = torch.tensor([5.0, 10.0, 15.0, 20.0]).reshape(-1, 1).to(device)
 
 # ----- 2. MODEL -----
-model = nn.Linear(1, 1)
+# Model CPU-da seed 42 ilə yaradılır (nəticə təkrarlanan olsun), sonra GPU-ya köçür.
+model = nn.Linear(1, 1).to(device)
+print("Model harada:", next(model.parameters()).device)
 print("Başlanğıc w:", round(model.weight.item(), 3))
 print("Başlanğıc b:", round(model.bias.item(), 3))
 
@@ -80,21 +104,21 @@ plt.grid(True)
 plt.show()
 ```
 
-## Hüceyrə 3 — KOD (Code) — 7. YOXLAMA
+## Hüceyrə 4 — KOD (Code) — 7. YOXLAMA
 
 ```python
 # ----- 7. YOXLAMA -----
 # TAMAMLA: modeldən x=10 üçün proqnoz alın.
 # no_grad() — proqnoz verərkən gradient hesablamağa ehtiyac yoxdur.
 with torch.no_grad():
-    yeni = torch.tensor([[10.0]])
+    yeni = torch.tensor([[10.0]]).to(device)   # giriş də modelin olduğu cihazda olmalıdır
     cavab = model(yeni)
 
 print("x=10 üçün model dedi:", round(cavab.item(), 2))
 print("Doğru cavab: 50")
 ```
 
-## Hüceyrə 4 — MƏTN (Text) — Durust oxunus
+## Hüceyrə 5 — MƏTN (Text) — Durust oxunus
 
 ````markdown
 ## Nəticənin dürüst oxunuşu
@@ -116,7 +140,7 @@ Dərsin 7-ci bölməsindəki «əyrini necə oxumaq lazımdır» cədvəlinə g�
 Aşağıdakı hüceyrə bunu sübut edir.
 ````
 
-## Hüceyrə 5 — KOD (Code) — Subut ve davam
+## Hüceyrə 6 — KOD (Code) — Subut ve davam
 
 ```python
 # Qalıq b — 47.3 rəqəminin bütün izahı buradadır.
@@ -127,7 +151,7 @@ print("w * 10 + b =", round(model.weight.item() * 10 + model.bias.item(), 2))
 # Eyni başlanğıc nöqtəsi (seed 42), eyni lr — sadəcə daha çox addım.
 # Diqqət: bu YENİ modeldir, yuxarıdakı modelə toxunmuruq.
 torch.manual_seed(42)
-model_uzun = nn.Linear(1, 1)
+model_uzun = nn.Linear(1, 1).to(device)
 optimizer_uzun = optim.SGD(model_uzun.parameters(), lr=0.01)
 
 loss_siyahisi_uzun = []
@@ -143,12 +167,12 @@ print("\n2000 epoch sonra:  w =", round(model_uzun.weight.item(), 3),
       "  b =", round(model_uzun.bias.item(), 4))
 
 with torch.no_grad():
-    cavab_uzun = model_uzun(torch.tensor([[10.0]]))
+    cavab_uzun = model_uzun(torch.tensor([[10.0]]).to(device))
 
 print("x=10 üçün model dedi:", round(cavab_uzun.item(), 2), " (doğru cavab: 50)")
 ```
 
-## Hüceyrə 6 — KOD (Code) — Muqayise qrafiki
+## Hüceyrə 7 — KOD (Code) — Muqayise qrafiki
 
 ```python
 # ----- ƏLAVƏ QRAFİK: 200 epoch və 2000 epoch yanaşı -----
@@ -183,7 +207,7 @@ ax1.plot(kenar, [w_q * v + b_q for v in kenar], color=QISA, linewidth=2,
          label=f"200 epoch  ·  w = {w_q:.2f}")
 ax1.plot(kenar, [w_u * v + b_u for v in kenar], color=UZUN, linewidth=2,
          label=f"2000 epoch  ·  w = {w_u:.2f}")
-ax1.scatter(X.squeeze().tolist(), y.squeeze().tolist(), s=80, color=INK,
+ax1.scatter(X.cpu().squeeze().tolist(), y.cpu().squeeze().tolist(), s=80, color=INK,
             zorder=3, label="Öyrətmə misalları (cəmi 4)")
 ax1.axvline(10, color=MUTED, linewidth=1, linestyle=":")
 ax1.annotate(f"{p_q:.1f}", xy=(10, p_q), xytext=(8, -16), textcoords="offset points",
@@ -213,7 +237,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Hüceyrə 7 — MƏTN (Text) — Netice
+## Hüceyrə 8 — MƏTN (Text) — Netice
 
 ````markdown
 ## Nəticə
