@@ -1,50 +1,38 @@
-# AI Mühəndisliyi kursu — ev tapşırıqları
+<h1 align="center">AI Mühəndisliyi kursu — ev tapşırıqları</h1>
 
-Kurs tapşırıqlarının hazır həlləri. Hər dərs öz qovluğundadır.
+<p align="center">
+  <a href="https://colab.research.google.com/github/AlimAlirzayev/ai-dersler-ltclab/blob/main/ders-36-pytorch/ders36_ev_tapsirigi.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Colab-da aç"></a>
+  <a href="https://raw.githack.com/AlimAlirzayev/ai-dersler-ltclab/main/ders-36-pytorch/simulyator.html"><img src="https://img.shields.io/badge/Canl%C4%B1%20simulyator-a%C3%A7-2a78d6?style=flat-square" alt="Canlı simulyator"></a>
+  <img src="https://img.shields.io/badge/PyTorch-2.x-eb6834?style=flat-square&logo=pytorch&logoColor=white" alt="PyTorch">
+  <img src="https://img.shields.io/badge/qura%C5%9Fd%C4%B1rma-yoxdur-0ca30c?style=flat-square" alt="Quraşdırma yoxdur">
+</p>
 
-| Dərs | Mövzu | Qovluq | Vəziyyət |
-|---|---|---|---|
-| #36 | PyTorch əsasları — tensor, autograd, training loop (`y = 5x`) | [`ders-36-pytorch/`](ders-36-pytorch/) | hazır |
+<p align="center"><b>Dərs #36</b> — modelə <code>y = 5x</code> düsturu deyilmir; o, cəmi <b>4 misaldan</b> özü tapır.</p>
 
-## Dərs #36 — nə var
+<p align="center">
+  <a href="https://raw.githack.com/AlimAlirzayev/ai-dersler-ltclab/main/ders-36-pytorch/simulyator.html">
+    <img src="ders-36-pytorch/ekran.png" alt="Simulyator — epoch 200" width="880">
+  </a>
+</p>
 
-| Fayl | Nədir |
+## Dərs #36 · `ders-36-pytorch/`
+
+| | |
 |---|---|
-| `ders36_ev_tapsirigi.ipynb` | Tam notebook (10 hüceyrə). Colab → *File → Upload notebook* |
-| `simulyator.html` | **Canlı simulyator** — öyrənməni addım-addım oynadan tək fayl |
-| `hucreler.md` | Eyni hüceyrələr, mövcud Colab-a yapışdırmaq üçün |
-| `numayis.md` | Kursda nümayiş skripti + müəllim sualları və cavabları |
-| `build.py` | `.ipynb` və `hucreler.md` faylını eyni mənbədən yazır (`python build.py`) |
+| 📓 [`ders36_ev_tapsirigi.ipynb`](ders-36-pytorch/ders36_ev_tapsirigi.ipynb) | Tam həll, 10 hüceyrə · T4 GPU · loss qrafiki · `x = 10` proqnozu |
+| 🎛 [`simulyator.html`](ders-36-pytorch/simulyator.html) | Öyrənməni addım-addım oynadır · tək fayl, internetsiz işləyir |
+| 📋 [`hucreler.md`](ders-36-pytorch/hucreler.md) | Hüceyrələr, mövcud Colab-a yapışdırmaq üçün |
+| 🎤 [`numayis.md`](ders-36-pytorch/numayis.md) | Nümayiş skripti + müəllim sualları və cavabları |
 
-### Simulyator
+### Nəticə — dürüst
 
-`simulyator.html` heç nə quraşdırmır, internetsiz işləyir və notebook-un
-son hüceyrəsindən Colab-ın içində də açılır. Nə edir:
+| | 200 epoch *(tapşırığın skeleti)* | 2000 epoch | `b` dondurulmuş |
+|---|---|---|---|
+| `w` | **4.620** | **4.998** | **5.000** |
+| `b` | 1.117 | 0.005 | 0 *(sabit)* |
+| `x = 10` | **47.3** | **49.99** | **50.00** |
 
-- `▶ Oynat` / `⏭ 1 addım` — dərsin 5 sətri hər addımda canlı rəqəmlərlə
-  (`proqnoz → loss → zero_grad → backward → step`)
-- `lr` seçimi — `1.0`-da modelin necə korlandığını göstərir (dərsin 6.2 cədvəli)
-- **`b`-ni sıfırda dondur** — bir kliklə sübut edir ki, 47.3-ün səbəbi
-  `b`-dir: dondurulmuş halda model ~56 addımda `w = 5.000`, `x = 10 → 50.0` verir
-- İki qrafik: modelin cari xətti (4 nöqtə + hədəf `y = 5x`) və loss əyrisi
-  (loqarifmik, «epoch 200» işarəsi ilə)
-
-Riyaziyyat notebook ilə eynidir — eyni başlanğıc (`w = 0.7645`, `b = 0.8300`),
-eyni nəticələr (200 epoch → `47.32`, 2000 epoch → `49.99`).
-
-Notebook heç bir asılılıq quraşdırmır — `torch` və `matplotlib` Colab-da hazırdır.
-İşlətməzdən əvvəl `Runtime → Change runtime type → T4 GPU → Save` (dərsin 2-ci
-bölməsi); model və məlumat dərsin 3.6-dakı kimi `.to(device)` ilə GPU-ya köçürülür.
-
-## Dərs #36 — qısa nəticə
-
-Model `y = 5x` düsturunu görmür, yalnız 4 misal alır (1→5, 2→10, 3→15, 4→20).
-
-- Tapşırığın skeleti (200 epoch, `lr = 0.01`) olduğu kimi saxlanılıb →
-  `w = 4.62`, `x = 10` üçün **47.3**.
-- Tapşırıq 50 vəd edir. Fərqin səbəbi kod deyil: `nn.Linear` `b`-ni də öyrənir
-  və 200 addımda `b ≈ 1.12` qalır, `w` isə onu kompensasiya edir.
-- Ayrıca hüceyrədə eyni seed və eyni `lr` ilə **yeni** model 2000 epoch
-  öyrədilir → `w = 5.00`, `x = 10` üçün **49.99**.
-
-Skelet gizlicə dəyişdirilməyib; fərq izah edilib və sübutu notebook-un içindədir.
+Tapşırıq 50 vəd edir, skelet isə 47.3 verir. **Səbəb kod deyil:** `nn.Linear` `b`-ni
+də öyrənir, 200 addımda `b ≈ 1.12` qalır və `w` onu kompensasiya edir. Simulyatorda
+**«b-ni sıfırda dondur»** açarı bunu bir kliklə sübut edir — model ~56 addımda dəqiq
+`50.0` verir. Skelet gizlicə dəyişdirilməyib; uzun təlim ayrıca hüceyrədədir.
