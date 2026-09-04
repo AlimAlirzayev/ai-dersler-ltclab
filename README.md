@@ -15,8 +15,9 @@ Kurs tapşırıqlarının hazır həlləri. Hər dərs öz qovluğundadır.
 | `numayis.md` | Kursda nümayiş skripti + müəllim sualları və cavabları |
 | `build.py` | `.ipynb` və `hucreler.md` faylını eyni mənbədən yazır (`python build.py`) |
 
-Notebook heç bir asılılıq quraşdırmır — `torch` və `matplotlib` Colab-da hazırdır,
-Runtime T4 GPU seçilməlidir (dərsin 2-ci bölməsi); model dərsin 3.6-dakı kimi `.to(device)` ilə GPU-ya köçür.
+Notebook heç bir asılılıq quraşdırmır — `torch` və `matplotlib` Colab-da hazırdır.
+İşlətməzdən əvvəl `Runtime → Change runtime type → T4 GPU → Save` (dərsin 2-ci
+bölməsi); model və məlumat dərsin 3.6-dakı kimi `.to(device)` ilə GPU-ya köçürülür.
 
 ## Dərs #36 — qısa nəticə
 
