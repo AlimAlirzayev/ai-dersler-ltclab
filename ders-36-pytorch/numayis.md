@@ -53,6 +53,48 @@ addım sayında idi.»
 
 ---
 
+## «Colab-da canlı işlət və izah et» rejimi
+
+### Dərsdən əvvəl (2 dəqiqə, mütləq)
+
+1. Notebook-u aç → `File → Save a copy in Drive`. **Öz nüsxən olsun** — GitHub-dan
+   açılan versiya «read-only» xəbərdarlığı verir və canlı redaktə etmək olmur.
+2. `Runtime → Change runtime type → T4 GPU → Save`.
+3. Bir dəfə `Runtime → Run all` — hər şey işləsin, sonra `Runtime → Restart session`
+   ki, müəllimin qarşısında **təmiz vərəqdən** başlayasan.
+
+### Canlı ardıcıllıq — hər hüceyrədə `Shift + Enter`, hər hüceyrədə bir cümlə
+
+| Hüceyrə | Basırsan | Deyirsən |
+|---|---|---|
+| 0 · Hazırlıq | `Shift+Enter` | «Əvvəlcə mühiti yoxlayıram: PyTorch versiyası və GPU. `True` gördük — T4 aktivdir.» |
+| 2 · Əsas həll | `Shift+Enter` | «Burada 4 misal var və modelin iki düyməsi: `w` və `b`. Dövr 200 dəfə fırlanır və hər fırlanışda 5 sətir işləyir. Başlanğıc `w = 0.765` — yəni model heç nə bilmir.» |
+| — çıxış görünəndə | — | «Epoch 50, 100, 150, 200-də loss enir, `w` isə 4.4 → 4.62-yə qalxır. Qrafik də eyni şeyi deyir: sürətlə enib, sonra yavaşıyıb.» |
+| 3 · Yoxlama | `Shift+Enter` | «Model 10 rəqəmini heç görməyib. `47.3` dedi. Tapşırıq 50 gözləyir — səbəbini indi göstərəcəyəm.» |
+| 5 · Sübut | `Shift+Enter` | «Bax: `b = 1.117` qalıb. Modeli dəyişmədim — **yeni** modeli eyni seed və eyni `lr` ilə 2000 addım öyrətdim: `w = 5.00`, cavab `49.99`.» |
+| 6 · Qrafik | `Shift+Enter` | «Solda iki xətt: 4 misalın üstündən hər ikisi keçir, fərq yalnız `x = 10`-da görünür. Sağda loss loqarifmik oxda — nöqtəli xətt tapşırığın dayandığı yerdir.» |
+| 8 · Simulyator | `Shift+Enter` | «Eyni riyaziyyat, canlı. `Oynat` → xətt oturur. İndi `b`-ni dondururam → 56 addımda dəqiq 50.» |
+
+**Ritm:** hər hüceyrədən sonra 2-3 saniyə susub çıxışa bax, sonra danış. Tələsmə —
+kod artıq işləyir, sənin işin izah etməkdir.
+
+### Müəllim «dəyiş görüm» desə — hazır cavablar
+
+Dəyişikliyi 2-ci hüceyrədə et, sonra **həmin hüceyrədən aşağıya** `Shift+Enter`.
+
+| Müəllim deyir | Dəyişirsən | Nəticə (əvvəlcədən hesablanıb) |
+|---|---|---|
+| «`lr`-i böyüt» | `lr=0.01` → `lr=0.1` | `w = 4.998`, `x=10 → 49.99` — **200 epoch-da 50-yə çatır.** «Addım böyüdü, ona görə `b` tez sıfırlandı.» |
+| «Daha da böyüt» | `lr=0.2` | Model **korlanır** (loss partlayır). «Dərsdəki üçüncü hal: addım o qədər böyükdür ki, dərəni tullanıb keçir.» |
+| «`lr`-i kiçilt» | `lr=0.001` | `w = 4.226`, `x=10 → 44.1`. «Addım kiçildi, 200 dəfə azlıq etdi.» |
+| «Başqa düstur öyrət» | `y = [7,14,21,28]` | `w = 6.506`, `x=10 → 66.5` (doğru 70). «Eyni məntiq: 200 addım azdır, `b = 1.45` qalıb.» |
+| «Epoch-u artır» | `range(200)` → `range(2000)` | `w = 4.998`, `x=10 → 49.99`. |
+
+Əgər nəyisə səhv basıb kod pozulsan: `Runtime → Restart session and run all` —
+15 saniyəyə hər şey qayıdır. Panik yoxdur.
+
+---
+
 ## Müəllim sualları və cavablar
 
 **«Niyə 50 çıxmadı, kodunda səhv var?»**
