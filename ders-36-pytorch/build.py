@@ -224,6 +224,34 @@ plt.tight_layout()
 plt.show()
 """))
 
+CELLS.append(("md", "Simulyator", """## Canlı simulyator — addımları özün oynat
+
+Aşağıdakı hüceyrə eyni riyaziyyatı brauzerdə canlandırır: `▶ Oynat` /
+`⏭ 1 addım`, `lr` seçimi və ən vacibi — **«b-ni sıfırda dondur»** açarı.
+Həmin açarı yandıranda model ~56 addımda `w = 5.000` və `x = 10 → 50.0` verir;
+yəni 47.3 rəqəminin səbəbi kod deyil, öyrənilən ikinci ədəd `b`-dir.
+"""))
+
+CELLS.append(("code", "Simulyatoru ac", r"""# ----- ƏLAVƏ: canlı simulyator -----
+import urllib.request
+from IPython.display import HTML, display
+
+URL = ("https://raw.githubusercontent.com/AlimAlirzayev/ai-dersler-ltclab"
+       "/main/ders-36-pytorch/simulyator.html")
+
+try:
+    sehife = urllib.request.urlopen(URL, timeout=20).read().decode("utf-8")
+    qorunmus = sehife.replace("&", "&amp;").replace('"', "&quot;")
+    display(HTML(
+        f'<iframe srcdoc="{qorunmus}" loading="lazy" '
+        f'style="width:100%;height:1560px;border:0;border-radius:12px"></iframe>'
+    ))
+except Exception as xeta:
+    print("Simulyator yüklənmədi:", xeta)
+    print("Birbaşa aç:", URL.replace("raw.githubusercontent.com",
+                                     "htmlpreview.github.io/?https://raw.githubusercontent.com"))
+"""))
+
 CELLS.append(("md", "Netice", """## Nəticə
 
 - Model `5` rəqəmini heç vaxt görmədi. Cəmi 4 misala baxdı və qanunauyğunluğu

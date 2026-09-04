@@ -237,7 +237,41 @@ plt.tight_layout()
 plt.show()
 ```
 
-## Hüceyrə 8 — MƏTN (Text) — Netice
+## Hüceyrə 8 — MƏTN (Text) — Simulyator
+
+````markdown
+## Canlı simulyator — addımları özün oynat
+
+Aşağıdakı hüceyrə eyni riyaziyyatı brauzerdə canlandırır: `▶ Oynat` /
+`⏭ 1 addım`, `lr` seçimi və ən vacibi — **«b-ni sıfırda dondur»** açarı.
+Həmin açarı yandıranda model ~56 addımda `w = 5.000` və `x = 10 → 50.0` verir;
+yəni 47.3 rəqəminin səbəbi kod deyil, öyrənilən ikinci ədəd `b`-dir.
+````
+
+## Hüceyrə 9 — KOD (Code) — Simulyatoru ac
+
+```python
+# ----- ƏLAVƏ: canlı simulyator -----
+import urllib.request
+from IPython.display import HTML, display
+
+URL = ("https://raw.githubusercontent.com/AlimAlirzayev/ai-dersler-ltclab"
+       "/main/ders-36-pytorch/simulyator.html")
+
+try:
+    sehife = urllib.request.urlopen(URL, timeout=20).read().decode("utf-8")
+    qorunmus = sehife.replace("&", "&amp;").replace('"', "&quot;")
+    display(HTML(
+        f'<iframe srcdoc="{qorunmus}" loading="lazy" '
+        f'style="width:100%;height:1560px;border:0;border-radius:12px"></iframe>'
+    ))
+except Exception as xeta:
+    print("Simulyator yüklənmədi:", xeta)
+    print("Birbaşa aç:", URL.replace("raw.githubusercontent.com",
+                                     "htmlpreview.github.io/?https://raw.githubusercontent.com"))
+```
+
+## Hüceyrə 10 — MƏTN (Text) — Netice
 
 ````markdown
 ## Nəticə

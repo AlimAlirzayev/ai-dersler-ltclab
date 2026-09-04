@@ -37,6 +37,14 @@ təsadüfi `0.83`-dən başlayır və çox yavaş enir — 200 epoch-dan sonra h
 dəyişmədim; **ayrıca yeni modeli** eyni seed və eyni `lr` ilə 2000 epoch
 öyrətdim → `w = 5.00`, `x=10 → 49.99`.»
 
+**5b. Simulyatoru aç — nümayişin ürəyi budur** (sonuncu hüceyrə).
+«Eyni riyaziyyatı canlı göstərim.» `▶ Oynat` — xəttin nöqtələrə necə
+oturduğunu, `w` və `b`-nin necə dəyişdiyini birlikdə izləyin. Sonra
+**«b-ni sıfırda dondur»** açarını yandır və `Sıfırla` de:
+«Bax — indi model yalnız `w`-ni öyrənir və ~56 addımda `w = 5.000`,
+`x = 10 → 50.0`. Deməli problem kodda yox, ikinci öyrənilən ədəddə idi.»
+Vaxt varsa `lr = 1.0` seç: model korlanır — dərsin 6.2 cədvəlindəki üçüncü hal.
+
 **6. Müqayisə qrafiki ilə bağla** (6-cı hüceyrə).
 «Solda: mavi xətt 200 epoch, narıncı 2000. 4 misalın üstündən hər ikisi keçir,
 fərq yalnız məlumatdan kənarda — `x = 10`-da — görünür. Sağda: loss loqarifmik

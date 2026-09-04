@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dərs #36 — y = 5x öyrənmə simulyatoru</title>
+<style>
+  :root{
+    color-scheme: light;
+    --plane:#f9f9f7; --surface:#fcfcfb;
+    --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+    --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,0.10);
+    --s1:#2a78d6;   /* model / cari vəziyyət */
+    --s2:#eb6834;   /* hədəf / uzun təlim */
+    --good:#0ca30c; --crit:#d03b3b;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --plane:#0d0d0d; --surface:#1a1a19;
+      --ink:#ffffff; --ink2:#c3c2b7; --muted:#898781;
+      --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,0.10);
+      --s1:#3987e5; --s2:#d95926;
+    }
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--plane); color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+    font-size:15px; line-height:1.5;
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding:28px 20px 64px}
+
+  header.hero{margin-bottom:22px}
+  .eyebrow{font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  h1{font-size:30px; line-height:1.2; margin:6px 0 8px; font-weight:700}
+  .lede{color:var(--ink2); max-width:70ch; margin:0}
+  .lede code{background:var(--surface); border:1px solid var(--border); border-radius:5px; padding:1px 5px; font-size:.92em}
+
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px}
+  .card + .card{margin-top:16px}
+  .card h2{font-size:15px; margin:0 0 14px; font-weight:650; letter-spacing:.01em}
+  .card h2 .hint{font-weight:400; color:var(--muted); font-size:13px; margin-left:8px}
+
+  /* ---- idarə paneli ---- */
+  .controls{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+  button{
+    font:inherit; font-weight:600; font-size:14px; cursor:pointer;
+    background:var(--ink); color:var(--surface); border:1px solid var(--ink);
+    border-radius:9px; padding:9px 16px; transition:opacity .15s;
+  }
+  button:hover{opacity:.85}
+  button.ghost{background:transparent; color:var(--ink2); border-color:var(--border)}
+  button.ghost:hover{border-color:var(--axis); color:var(--ink)}
+  button:disabled{opacity:.4; cursor:default}
+  .seg{display:flex; border:1px solid var(--border); border-radius:9px; overflow:hidden}
+  .seg button{border:0; border-radius:0; background:transparent; color:var(--ink2); padding:8px 13px; font-size:13px}
+  .seg button[aria-pressed="true"]{background:var(--s1); color:#fff}
+  .field{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink2)}
+  .field label{font-weight:600; color:var(--ink)}
+  input[type=range]{accent-color:var(--s1); width:190px}
+  .switch{
+    display:inline-flex; align-items:center; gap:9px; cursor:pointer;
+    border:1px solid var(--border); border-radius:9px; padding:8px 13px; font-size:13px; color:var(--ink2);
+  }
+  .switch input{accent-color:var(--s2); width:16px; height:16px}
+  .switch[data-on="true"]{border-color:var(--s2); color:var(--ink)}
+
+  /* ---- göstəricilər ---- */
+  .tiles{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:16px}
+  .tile{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 16px}
+  .tile .k{font-size:12px; color:var(--muted); font-weight:600; letter-spacing:.02em}
+  .tile .v{font-size:27px; font-weight:700; margin-top:4px; font-variant-numeric:tabular-nums}
+  .tile .t{font-size:12px; color:var(--ink2); margin-top:3px; font-variant-numeric:tabular-nums}
+  .tile.model .v{color:var(--s1)}
+  .badge{display:inline-block; font-size:11px; font-weight:700; padding:2px 7px; border-radius:20px; margin-left:6px; vertical-align:middle}
+  .badge.ok{background:rgba(12,163,12,.14); color:var(--good)}
+  .badge.no{background:rgba(208,59,59,.14); color:var(--crit)}
+
+  /* ---- qrafiklər ---- */
+  .charts{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px}
+  svg{display:block; width:100%; height:auto}
+  .legend{display:flex; gap:16px; flex-wrap:wrap; font-size:12.5px; color:var(--ink2); margin-top:8px}
+  .legend i{display:inline-block; width:14px; height:3px; border-radius:2px; margin-right:6px; vertical-align:middle}
+  .legend i.dot{width:9px; height:9px; border-radius:50%}
+
+  /* ---- 5 addım ---- */
+  .steps{display:grid; gap:8px}
+  .step{
+    display:grid; grid-template-columns:26px 1fr auto; gap:12px; align-items:center;
+    border:1px solid var(--border); border-radius:10px; padding:10px 13px;
+    transition:border-color .15s, background .15s;
+  }
+  .step .n{
+    width:24px; height:24px; border-radius:50%; background:var(--grid); color:var(--ink2);
+    font-size:12px; font-weight:700; display:grid; place-items:center;
+  }
+  .step .lbl code{font-size:13px; font-weight:600}
+  .step .lbl small{display:block; color:var(--muted); font-size:12px; margin-top:1px}
+  .step .val{font-size:13px; color:var(--ink2); font-variant-numeric:tabular-nums; text-align:right}
+  .step[data-active="true"]{border-color:var(--s1); background:color-mix(in srgb, var(--s1) 7%, transparent)}
+  .step[data-active="true"] .n{background:var(--s1); color:#fff}
+
+  .note{margin-top:14px; padding:13px 15px; border-left:3px solid var(--s2); background:color-mix(in srgb, var(--s2) 7%, transparent); border-radius:0 10px 10px 0; font-size:14px; color:var(--ink2)}
+  .note b{color:var(--ink)}
+  .foot{margin-top:26px; font-size:12.5px; color:var(--muted); border-top:1px solid var(--border); padding-top:14px}
+  .foot code{font-size:12px}
+
+  @media (max-width:900px){
+    .charts{grid-template-columns:1fr}
+    .tiles{grid-template-columns:repeat(2,1fr)}
+    h1{font-size:24px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">Dərs #36 · Ev tapşırığı</div>
+  <h1>Model <code>y = 5x</code> düsturunu necə tapır?</h1>
+  <p class="lede">
+    Modelə düstur deyilmir. Ona cəmi <b>4 misal</b> verilir — 1→5, 2→10, 3→15, 4→20 — və
+    o, hər addımda öz iki ədədini (<code>w</code> və <code>b</code>) bir az düzəldir.
+    Aşağıdakı düymə həmin addımları bir-bir oynadır: eyni riyaziyyat, eyni başlanğıc
+    nöqtəsi (<code>torch.manual_seed(42)</code>), Colab-dakı notebook ilə eyni rəqəmlər.
+  </p>
+</header>
+
+<div class="card">
+  <div class="controls">
+    <button id="play">▶ Oynat</button>
+    <button id="one" class="ghost">⏭ 1 addım</button>
+    <button id="reset" class="ghost">↺ Sıfırla</button>
+
+    <div class="field">
+      <label for="lr">lr</label>
+      <div class="seg" id="lrseg">
+        <button data-lr="0.001">0.001</button>
+        <button data-lr="0.01" aria-pressed="true">0.01</button>
+        <button data-lr="0.1">0.1</button>
+        <button data-lr="1">1.0</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="speed">Sürət</label>
+      <input type="range" id="speed" min="1" max="60" value="8">
+      <span id="speedv" style="font-variant-numeric:tabular-nums">8 epoch/kadr</span>
+    </div>
+
+    <label class="switch" id="biasSwitch" data-on="false">
+      <input type="checkbox" id="bias">
+      <span><b>b</b>-ni sıfırda dondur</span>
+    </label>
+  </div>
+
+  <div class="tiles">
+    <div class="tile model">
+      <div class="k">w — həssaslıq</div>
+      <div class="v" id="tw">0.765</div>
+      <div class="t">hədəf: 5.000</div>
+    </div>
+    <div class="tile model">
+      <div class="k">b — sıfır nöqtəsi</div>
+      <div class="v" id="tb">0.830</div>
+      <div class="t">hədəf: 0.000</div>
+    </div>
+    <div class="tile">
+      <div class="k">Loss — səhv</div>
+      <div class="v" id="tl">—</div>
+      <div class="t" id="tep">epoch 0 / 2000</div>
+    </div>
+    <div class="tile">
+      <div class="k">Proqnoz: x = 10</div>
+      <div class="v" id="tp">8.4</div>
+      <div class="t">doğru cavab: 50.0 <span class="badge no" id="tpb">uzaq</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="charts">
+  <div class="card">
+    <h2>Model hansı xətti çəkir? <span class="hint">4 nöqtə sabitdir, xətt hərəkət edir</span></h2>
+    <svg id="fit" viewBox="0 0 520 320" role="img" aria-label="Model xətti və öyrətmə misalları"></svg>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--ink)"></i>Öyrətmə misalları (4)</span>
+      <span><i style="background:var(--s1)"></i>Modelin cari xətti</span>
+      <span><i style="background:var(--s2)"></i>Doğru cavab y = 5x</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Səhv necə azalır? <span class="hint">loqarifmik ox</span></h2>
+    <svg id="loss" viewBox="0 0 520 320" role="img" aria-label="Loss əyrisi"></svg>
+    <div class="legend">
+      <span><i style="background:var(--s1)"></i>Loss (hər epoch)</span>
+      <span><i style="background:var(--axis)"></i>Tapşırığın dayandığı yer: epoch 200</span>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Bir epoch-un içi — dərsin 5 sətri <span class="hint">rəqəmlər cari addımdandır</span></h2>
+  <div class="steps" id="steps">
+    <div class="step" data-i="1">
+      <div class="n">1</div>
+      <div class="lbl"><code>proqnoz = model(X)</code><small>Model 4 misala cavab verir: w·x + b</small></div>
+      <div class="val" id="v1">—</div>
+    </div>
+    <div class="step" data-i="2">
+      <div class="n">2</div>
+      <div class="lbl"><code>loss = loss_fn(proqnoz, y)</code><small>Səhvlərin kvadratının ortası</small></div>
+      <div class="val" id="v2">—</div>
+    </div>
+    <div class="step" data-i="3">
+      <div class="n">3</div>
+      <div class="lbl"><code>optimizer.zero_grad()</code><small>Köhnə qaralama silinir — yoxsa gradientlər toplanır</small></div>
+      <div class="val" id="v3">—</div>
+    </div>
+    <div class="step" data-i="4">
+      <div class="n">4</div>
+      <div class="lbl"><code>loss.backward()</code><small>Yamacın istiqaməti: hansı ədədi hansı tərəfə</small></div>
+      <div class="val" id="v4">—</div>
+    </div>
+    <div class="step" data-i="5">
+      <div class="n">5</div>
+      <div class="lbl"><code>optimizer.step()</code><small>Addım atılır: yeni = köhnə − lr · gradient</small></div>
+      <div class="val" id="v5">—</div>
+    </div>
+  </div>
+  <div class="note" id="note"></div>
+</div>
+
+<div class="foot">
+  Riyaziyyat notebook-dakı ilə eynidir: <code>nn.MSELoss()</code> (orta), <code>optim.SGD</code>,
+  başlanğıc <code>w = 0.7645</code>, <code>b = 0.8300</code> — bunlar
+  <code>torch.manual_seed(42)</code> ilə <code>nn.Linear(1, 1)</code>-in verdiyi ədədlərdir.
+  Bu səhifə heç nə quraşdırmır və internetsiz işləyir.
+</div>
+
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const X = [1, 2, 3, 4], Y = [5, 10, 15, 20], N = 4;
+  const W0 = 0.76453852, B0 = 0.83000792;   // torch.manual_seed(42) -> nn.Linear(1,1)
+  const MAX_EPOCH = 2000;
+
+  const state = {
+    w: W0, b: B0, epoch: 0, lr: 0.01, freezeBias: false,
+    hist: [], last: null, playing: false, perFrame: 8, broken: false
+  };
+
+  const $ = id => document.getElementById(id);
+  const fmt = (v, d = 3) => Number.isFinite(v) ? v.toFixed(d) : "∞";
+
+  // ---------- riyaziyyat: bir epoch ----------
+  function epochStep() {
+    const p = X.map(x => state.w * x + state.b);
+    const d = p.map((v, i) => v - Y[i]);
+    const loss = d.reduce((s, v) => s + v * v, 0) / N;
+    const gw = 2 * d.reduce((s, v, i) => s + v * X[i], 0) / N;
+    const gb = 2 * d.reduce((s, v) => s + v, 0) / N;
+
+    state.hist.push(loss);
+    state.w -= state.lr * gw;
+    if (!state.freezeBias) state.b -= state.lr * gb;
+    state.epoch += 1;
+    state.last = { p, loss, gw, gb, dw: -state.lr * gw, db: state.freezeBias ? 0 : -state.lr * gb };
+
+    if (!Number.isFinite(state.w) || Math.abs(state.w) > 1e6) state.broken = true;
+  }
+
+  function reset() {
+    state.w = W0;
+    state.b = state.freezeBias ? 0 : B0;
+    state.epoch = 0; state.hist = []; state.last = null; state.broken = false;
+    stop(); render();
+  }
+
+  // ---------- SVG köməkçiləri ----------
+  const NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, parent) {
+    const n = document.createElementNS(NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+  function clear(svg) { while (svg.firstChild) svg.removeChild(svg.firstChild); }
+
+  const PAD = { l: 46, r: 18, t: 16, b: 34 };
+  const Wv = 520, Hv = 320;
+
+  function frame(svg, xTicks, yTicks, sx, sy, xLab, yLab) {
+    yTicks.forEach(t => {
+      const y = sy(t.v);
+      el("line", { x1: PAD.l, x2: Wv - PAD.r, y1: y, y2: y, stroke: "var(--grid)", "stroke-width": 1 }, svg);
+      el("text", { x: PAD.l - 8, y: y + 4, "text-anchor": "end", fill: "var(--muted)", "font-size": 11 }, svg)
+        .textContent = t.t;
+    });
+    xTicks.forEach(t => {
+      const x = sx(t.v);
+      el("text", { x, y: Hv - PAD.b + 18, "text-anchor": "middle", fill: "var(--muted)", "font-size": 11 }, svg)
+        .textContent = t.t;
+    });
+    el("line", { x1: PAD.l, x2: Wv - PAD.r, y1: Hv - PAD.b, y2: Hv - PAD.b, stroke: "var(--axis)", "stroke-width": 1 }, svg);
+    el("text", { x: Wv - PAD.r, y: Hv - 6, "text-anchor": "end", fill: "var(--muted)", "font-size": 11 }, svg).textContent = xLab;
+    el("text", { x: 4, y: 11, fill: "var(--muted)", "font-size": 11 }, svg).textContent = yLab;
+  }
+
+  // ---------- qrafik 1: xəttin uyğunlaşması ----------
+  function drawFit() {
+    const svg = $("fit"); clear(svg);
+    const xMin = 0, xMax = 11, yMin = 0, yMax = 57;
+    const sx = v => PAD.l + (v - xMin) / (xMax - xMin) * (Wv - PAD.l - PAD.r);
+    const sy = v => (Hv - PAD.b) - (v - yMin) / (yMax - yMin) * (Hv - PAD.t - PAD.b);
+
+    frame(svg,
+      [0, 2, 4, 6, 8, 10].map(v => ({ v, t: String(v) })),
+      [0, 10, 20, 30, 40, 50].map(v => ({ v, t: String(v) })),
+      sx, sy, "x", "y");
+
+    // hədəf xətti y = 5x
+    el("line", { x1: sx(0), y1: sy(0), x2: sx(11), y2: sy(55), stroke: "var(--s2)", "stroke-width": 2, "stroke-dasharray": "6 5", opacity: .75 }, svg);
+
+    // x = 10 şaquli
+    el("line", { x1: sx(10), y1: PAD.t, x2: sx(10), y2: Hv - PAD.b, stroke: "var(--axis)", "stroke-width": 1, "stroke-dasharray": "3 4" }, svg);
+    el("text", { x: sx(10) - 6, y: PAD.t + 12, "text-anchor": "end", fill: "var(--muted)", "font-size": 11 }, svg)
+      .textContent = "x = 10";
+
+    // modelin cari xətti
+    const yAt = x => state.w * x + state.b;
+    const clampY = v => Math.max(yMin - 6, Math.min(yMax + 6, v));
+    if (!state.broken) {
+      el("line", {
+        x1: sx(0), y1: sy(clampY(yAt(0))), x2: sx(11), y2: sy(clampY(yAt(11))),
+        stroke: "var(--s1)", "stroke-width": 2.5, "stroke-linecap": "round"
+      }, svg);
+
+      // x=10 proqnozu
+      const py = yAt(10);
+      if (py > yMin - 6 && py < yMax + 6) {
+        el("circle", { cx: sx(10), cy: sy(py), r: 5.5, fill: "var(--s1)", stroke: "var(--surface)", "stroke-width": 2 }, svg);
+        el("text", { x: sx(10) - 8, y: sy(py) + 4, "text-anchor": "end", fill: "var(--s1)", "font-size": 12.5, "font-weight": 700 }, svg)
+          .textContent = fmt(py, 1);
+      }
+    } else {
+      el("text", { x: Wv / 2, y: Hv / 2, "text-anchor": "middle", fill: "var(--crit)", "font-size": 14, "font-weight": 700 }, svg)
+        .textContent = "Model korlandı — lr çox böyükdür";
+    }
+
+    // öyrətmə misalları
+    X.forEach((x, i) => {
+      el("circle", { cx: sx(x), cy: sy(Y[i]), r: 5.5, fill: "var(--ink)", stroke: "var(--surface)", "stroke-width": 2 }, svg);
+    });
+  }
+
+  // ---------- qrafik 2: loss ----------
+  function drawLoss() {
+    const svg = $("loss"); clear(svg);
+    const lo = 1e-6, hi = 100;
+    const xMax = Math.max(200, Math.min(MAX_EPOCH, Math.max(state.epoch, 50)));
+    const sx = v => PAD.l + (v / xMax) * (Wv - PAD.l - PAD.r);
+    const ly = v => Math.log10(Math.max(lo, Math.min(hi, v)));
+    const sy = v => (Hv - PAD.b) - (ly(v) - Math.log10(lo)) / (Math.log10(hi) - Math.log10(lo)) * (Hv - PAD.t - PAD.b);
+
+    frame(svg,
+      [0, .25, .5, .75, 1].map(f => ({ v: Math.round(xMax * f), t: String(Math.round(xMax * f)) })),
+      [100, 1, .01, 1e-4, 1e-6].map(v => ({ v, t: v >= 1 ? String(v) : v.toExponential(0).replace("e-", "e−") })),
+      sx, sy, "Epoch", "Loss");
+
+    if (xMax >= 200) {
+      const x200 = sx(200), tight = x200 > Wv - PAD.r - 70;
+      el("line", { x1: x200, y1: PAD.t, x2: x200, y2: Hv - PAD.b, stroke: "var(--axis)", "stroke-width": 1, "stroke-dasharray": "3 4" }, svg);
+      el("text", {
+        x: tight ? x200 - 6 : x200 + 6, y: PAD.t + 12,
+        "text-anchor": tight ? "end" : "start", fill: "var(--muted)", "font-size": 11
+      }, svg).textContent = "epoch 200";
+    }
+
+    if (state.hist.length > 1) {
+      const stepN = Math.max(1, Math.floor(state.hist.length / 600));
+      let d = "";
+      for (let i = 0; i < state.hist.length; i += stepN) {
+        const v = state.hist[i];
+        if (!Number.isFinite(v)) break;
+        d += (d ? "L" : "M") + sx(i).toFixed(1) + " " + sy(v).toFixed(1);
+      }
+      el("path", { d, fill: "none", stroke: "var(--s1)", "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+    } else {
+      el("text", { x: Wv / 2, y: Hv / 2, "text-anchor": "middle", fill: "var(--muted)", "font-size": 13 }, svg)
+        .textContent = "«Oynat» düyməsini bas";
+    }
+  }
+
+  // ---------- mətn panelləri ----------
+  function drawSteps() {
+    const L = state.last;
+    const on = i => document.querySelector('.step[data-i="' + i + '"]');
+    [1, 2, 3, 4, 5].forEach(i => on(i).setAttribute("data-active", L ? "true" : "false"));
+    if (!L) { [1, 2, 3, 4, 5].forEach(i => $("v" + i).textContent = "—"); return; }
+    $("v1").textContent = "[" + L.p.map(v => fmt(v, 2)).join(", ") + "]";
+    $("v2").textContent = fmt(L.loss, 4);
+    $("v3").textContent = "gradientlər = 0";
+    $("v4").textContent = "∂w = " + fmt(L.gw, 3) + " · ∂b = " + fmt(L.gb, 3);
+    $("v5").textContent = "w " + (L.dw >= 0 ? "+" : "−") + fmt(Math.abs(L.dw), 5) +
+                          " · b " + (L.db >= 0 ? "+" : "−") + fmt(Math.abs(L.db), 5);
+  }
+
+  function drawNote() {
+    const n = $("note"), p = state.w * 10 + state.b;
+    if (state.broken) {
+      n.innerHTML = "<b>Model korlandı.</b> <code>lr = 1</code> ilə addım o qədər böyükdür ki, " +
+        "model dərəni tullanıb keçir və hər dəfə daha uzağa düşür. Dərsin 6.2 cədvəlindəki üçüncü hal budur. " +
+        "<code>lr</code>-i 0.01-ə qaytar və «Sıfırla» de.";
+      return;
+    }
+    if (state.epoch === 0) {
+      n.innerHTML = "<b>Başlanğıc.</b> Model heç nə bilmir: <code>w = 0.765</code>, <code>b = 0.830</code> — " +
+        "bunlar təsadüfi ədədlərdir. Mavi xətt nöqtələrdən çox uzaqdır. «Oynat»-a bas.";
+      return;
+    }
+    if (state.freezeBias) {
+      n.innerHTML = "<b>b dondurulub.</b> İndi model yalnız <code>w</code>-ni öyrənir və " +
+        "cəmi ~56 addımda <code>w = 5.000</code>, <code>x = 10 → 50.0</code> olur. " +
+        "Deməli tapşırıqda 47.3 çıxmasının səbəbi kod deyil — <b>öyrənilən ikinci ədəd " +
+        "<code>b</code>-dir</b>, o sıfıra çox yavaş enir.";
+      return;
+    }
+    if (state.epoch <= 200) {
+      n.innerHTML = "<b>Tapşırığın zonası (200 epoch).</b> Hazırda <code>b = " + fmt(state.b, 3) +
+        "</code> — hələ sıfırdan uzaqdır. Model ümumi səhvi azaltmaq üçün <code>w</code>-ni " +
+        "5-dən aşağı saxlayıb bu artıq <code>b</code>-ni kompensasiya edir; buna görə " +
+        "<code>x = 10</code> üçün " + fmt(p, 1) + " çıxır, 50 yox. " +
+        "Sağdakı əyri hələ enir — yəni öyrənmə bitməyib.";
+      return;
+    }
+    n.innerHTML = "<b>200-dən sonra.</b> Epoch " + state.epoch + ": <code>b</code> " +
+      fmt(state.b, 3) + "-ə enib, <code>w</code> isə " + fmt(state.w, 3) +
+      "-ə qalxıb. <code>x = 10 → " + fmt(p, 2) + "</code>. Heç nə dəyişmədi — sadəcə " +
+      "<b>daha çox addım atıldı</b>.";
+  }
+
+  function render() {
+    $("tw").textContent = fmt(state.w, 3);
+    $("tb").textContent = fmt(state.b, 3);
+    $("tl").textContent = state.hist.length ? fmt(state.hist[state.hist.length - 1], 4) : "—";
+    $("tep").textContent = "epoch " + state.epoch + " / " + MAX_EPOCH;
+
+    const p = state.w * 10 + state.b;
+    $("tp").textContent = state.broken ? "—" : fmt(p, 1);
+    const b = $("tpb"), diff = Math.abs(p - 50);
+    if (state.broken) { b.className = "badge no"; b.textContent = "korlandı"; }
+    else if (diff < 0.1) { b.className = "badge ok"; b.textContent = "çatdı"; }
+    else if (diff < 3) { b.className = "badge no"; b.textContent = "yaxın"; }
+    else { b.className = "badge no"; b.textContent = "uzaq"; }
+
+    drawFit(); drawLoss(); drawSteps(); drawNote();
+  }
+
+  // ---------- oynatma ----------
+  let raf = null;
+  function tick() {
+    for (let i = 0; i < state.perFrame && state.epoch < MAX_EPOCH && !state.broken; i++) epochStep();
+    render();
+    if (state.epoch >= MAX_EPOCH || state.broken) { stop(); return; }
+    raf = requestAnimationFrame(tick);
+  }
+  function play() {
+    if (state.epoch >= MAX_EPOCH || state.broken) return;
+    state.playing = true; $("play").textContent = "⏸ Dayandır";
+    raf = requestAnimationFrame(tick);
+  }
+  function stop() {
+    state.playing = false; $("play").textContent = "▶ Oynat";
+    if (raf) cancelAnimationFrame(raf); raf = null;
+  }
+
+  // ---------- hadisələr ----------
+  $("play").addEventListener("click", () => state.playing ? stop() : play());
+  $("one").addEventListener("click", () => {
+    stop();
+    if (state.epoch < MAX_EPOCH && !state.broken) { epochStep(); render(); }
+  });
+  $("reset").addEventListener("click", reset);
+
+  $("lrseg").addEventListener("click", e => {
+    const btn = e.target.closest("button[data-lr]");
+    if (!btn) return;
+    [...$("lrseg").querySelectorAll("button")].forEach(b => b.setAttribute("aria-pressed", String(b === btn)));
+    state.lr = parseFloat(btn.dataset.lr);
+    reset();
+  });
+
+  $("speed").addEventListener("input", e => {
+    state.perFrame = +e.target.value;
+    $("speedv").textContent = state.perFrame + " epoch/kadr";
+  });
+
+  $("bias").addEventListener("change", e => {
+    state.freezeBias = e.target.checked;
+    $("biasSwitch").setAttribute("data-on", String(e.target.checked));
+    reset();
+  });
+
+  window.addEventListener("keydown", e => {
+    if (e.code === "Space") { e.preventDefault(); state.playing ? stop() : play(); }
+    if (e.code === "ArrowRight") { e.preventDefault(); $("one").click(); }
+  });
+
+  reset();
+})();
+</script>
+</body>
+</html>
